@@ -1,0 +1,36 @@
+{% extends 'pagestore/base.html' %}
+{% load static %}
+
+{% block title %}Orders{% endblock %}
+{% block body %}
+<div class="home-empty"></div>
+<div class="card mb-2 g-5 m-2 color_bg_card">
+    <h2 class="favorites-header">Your Orders</h2>
+</div><br>
+{% for order in user_orders %}
+    <div class="card mb-3 box grid-item">
+        <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div class="d-flex flex-row align-items-center">
+            <div class="ms-3">
+                <h5>Date Created: {{ order.date_created }}</h5>
+                <p class="small mb-0">Total Cost: ${{ order.total_cost }}</p>
+            </div>
+            </div>
+            <div class="d-flex flex-row align-items-center">
+            <div style="width: 50px;">
+                <h5 class="fw-normal mb-0">  
+                    {% for product in order.products.all %}
+                        <li>{{ product.name }} - ${{ product.price }}</li>
+                    {% endfor %}
+                </h5>
+            </div>
+            {% if not forloop.last %}
+                <div class="order-divider"></div>
+            {% endif %}
+            </div>
+        </div>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
