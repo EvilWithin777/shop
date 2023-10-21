@@ -6,6 +6,9 @@
 
 
 <div class="home-empty"></div>
+{% for dis in discoun %}
+  <b class="justify-content-center discoun">{{ request.user.username }}, Your personal discount {{ dis.discount }}%</b>
+{% endfor %}<br><br>
 {% for message in messages %}
     <div class="message">
         <div class="alert alert-success" role="alert">
@@ -55,7 +58,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-2 m-2">
         {% for product in products %}
             <div class="card grid-item box">
-                <img src="{{ product.photo.url }}" class="card-img-top img-thumbnail" alt="{{ product.name }}">
+              <a href="{% url 'product_detail' product.id %}"><img src="{{ product.photo.url }}" class="card-img-top img-thumbnail" alt="{{ product.name }}"></a>
                 <div class="card-body">
                     <h5 class="card-title"><a href="{% url 'product_detail' product.id %}">{{ product.name|truncatechars:20 }}</a></h5>
                     <p class="card-text">{{ product.description|truncatechars:40 }}</p>
@@ -64,8 +67,8 @@
                       <p class="card-text">Category: {{ product.category }}</p>
                     {% endif %}
                     <p class="card-text">Price: ${{ product.price }}</p>
-                    {% if discount_percentage %}
-                        <p>Discounted percentage: ${{ discount_percentage }}</p>
+                    {% if product.discount_percentage %}
+                        <p>Discounted percentage: ${{ product.discount_percentage }}</p>
                         <p>Discounted price: ${{ product.discounted_price }}</p>
                     {% endif %}
                     <p>Available: {{ product.quantity }}</p>

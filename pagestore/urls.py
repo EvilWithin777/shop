@@ -17,7 +17,8 @@ urlpatterns = [
     path('cart/', views.cart, name='cart'),
     path('purchase_all/', views.purchase_all, name='purchase_all'),
     path('orders/', views.orders, name='orders'),
-    path('orders-list/', views.order_list, name='order_list'),
+    path('order_list/', views.order_list, name='order_list'),
+    path('order/<int:order_id>/', views.order_detail, name='order_detail'),
     #Fav
     path('add_to_favorites/<str:product_id>/', views.add_to_favorites, name='add_to_favorites'),
     path('favorites/', views.favorite_products, name='favorite_products'),

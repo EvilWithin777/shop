@@ -43,10 +43,13 @@
         <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success" type="submit">Search</button> 
     </div> -->
+    {% for dis in discoun %}
+        <b class="justify-content-center discoun">{{ request.user.username }}, Your personal discount {{ dis.discount }}%</b>
+    {% endfor %}<br><br>
     <div class="row row-cols-1 row-cols-md-3 g-2 m-2">
         {% for product in page_obj %}
             <div class="card grid-item box">
-                <img src="{{ product.photo.url }}" class="card-img-top img-thumbnail" alt="{{ product.name }}">
+                <a href="{% url 'product_detail' product.id %}"><img src="{{ product.photo.url }}" class="card-img-top img-thumbnail" alt="{{ product.name }}"></a>
                 <div class="card-body">
                     <h5 class="card-title"><a href="{% url 'product_detail' product.id %}">{{ product.name|truncatechars:20 }}</a></h5>
                     <p class="card-text">{{ product.description|truncatechars:40 }}</p>

@@ -22,12 +22,20 @@ class Product(models.Model):
         return self.name
 
 
+class Discounted(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f'{self.user} - {self.discount}'
+
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=50, blank=True, null=True)
     addres = models.CharField(max_length=100, blank=True, null=True)
     payment = models.CharField(max_length=50, blank=True, null=True)
-    products = models.ManyToManyField(Product)
+    products = models.ManyToManyField(Product, related_name="orders")
     total_cost = models.DecimalField(max_digits=10, decimal_places=2)
     date_created = models.DateTimeField(auto_now_add=True)
 

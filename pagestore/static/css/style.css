@@ -84,3 +84,7 @@ select{
 .pagination-text{
     font-size: 28px;
 }
+
+.discoun{
+    text-align: center !important ;
+}

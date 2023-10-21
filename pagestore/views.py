@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from .models import Product, Order
+from .models import Product, Order, Discounted
 from decimal import Decimal
 from .models import OrderItem, OrderedProduct, Favorite
 from django.db.models import Q
@@ -19,6 +19,7 @@ from django.core.mail import send_mail
 def shop(request):
     # Получаем все товары
     all_products = Product.objects.all()
+    discoun = Discounted.objects.filter(user=request.user)
 
     # Извлекаем параметры фильтрации, сортировки и категории из запроса
     filter_price_min = request.GET.get('price_min')
@@ -43,7 +44,7 @@ def shop(request):
         filtered_products = filtered_products.order_by('-price')
 
     # Создаем Paginator для отфильтрованных и отсортированных товаров
-    paginator = Paginator(filtered_products, 3)
+    paginator = Paginator(filtered_products, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -53,6 +54,7 @@ def shop(request):
         'filter_price_max': filter_price_max,
         'sort_by': sort_by,
         'category': category,
+        'discoun': discoun,
     }
 
     return render(request, 'pagestore/shop.html', context)
@@ -66,11 +68,13 @@ def homepage(request):
         total_spending = calculate_total_spending(request.user)
         discount_percentage = apply_discount(total_spending)
         user_favorites = Favorite.objects.get_or_create(user=user)[0].products.all()
+        discoun = Discounted.objects.filter(user=request.user)
     else:
         user = None
         total_spending = 0
         discount_percentage = 0
         user_favorites = []
+        discoun = None
 
     for product in products:
         product.quantity_in_cart = cart_dict.get(str(product.id), 0)
@@ -105,7 +109,8 @@ def homepage(request):
         'products': products,
         'total_spending': total_spending,
         'discount_percentage': discount_percentage,
-        'user_favorites': user_favorites
+        'user_favorites': user_favorites,
+        'discoun': discoun
     }
 
     return render(request, 'pagestore/homepage.html', context)
@@ -191,6 +196,7 @@ def product_detail(request, product_id):
 @login_required(login_url='loginpage')
 def cart(request):
     cart_dict = request.session.get('cart', {})
+    discoun = Discounted.objects.filter(user=request.user)
 
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
@@ -221,7 +227,14 @@ def cart(request):
         item_total = item['product'].price * item['quantity_in_cart']
         total_cost += item_total
 
-    context = {'cart_items': cart_items, 'total_cost': total_cost}
+    # Применяем скидку
+    discount = 0  # Скидка по умолчанию
+    if discoun.exists():
+        discount = discoun[0].discount  # Если есть скидка в базе данных
+
+    discounted_total = total_cost - (total_cost * discount / 100)
+
+    context = {'cart_items': cart_items, 'total_cost': total_cost, 'discount': discount, 'discounted_total': discounted_total}
     return render(request, 'pagestore/cart.html', context)
 
 
@@ -259,13 +272,13 @@ def purchase_all(request):
             product.save()
             order_item = OrderItem.objects.create(order=order, product=product, quantity=quantity)
     
-    email_subject = 'Новый заказ'
-    email_message = f'Новый заказ от {user}. Сумма заказа: ${total_cost_with_discount}\n\n'
-    email_message += f'Phone: {phone}\n'
-    email_message += f'Address: {addres}\n'
-    email_message += f'Payment Method: {payment}'
+    # email_subject = 'Новый заказ'
+    # email_message = f'Новый заказ от {user}. Сумма заказа: ${total_cost_with_discount}\n\n'
+    # email_message += f'Phone: {phone}\n'
+    # email_message += f'Address: {addres}\n'
+    # email_message += f'Payment Method: {payment}'
     
-    send_mail(email_subject, email_message, 'ToledoBilbao96@gmail.com', ['ToledoBilbao96@gmail.com'], fail_silently=False)
+    # send_mail(email_subject, email_message, 'ToledoBilbao96@gmail.com', ['ToledoBilbao96@gmail.com'], fail_silently=False)
 
     request.session['cart'] = {}
     request.session.modified = True
@@ -280,6 +293,14 @@ def purchase_all(request):
 def orders(request):
     user_orders = Order.objects.filter(user=request.user).order_by('-date_created')
     return render(request, 'pagestore/orders.html', {'user_orders': user_orders})
+
+
+@login_required(login_url='loginpage')
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order_items = OrderItem.objects.filter(order=order)  # Получаем все элементы заказа
+    return render(request, 'pagestore/order_detail.html', {'order': order, 'order_items': order_items})
+
 
 
 @login_required(login_url='loginpage')
