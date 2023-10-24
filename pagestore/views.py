@@ -19,7 +19,10 @@ from django.core.mail import send_mail
 def shop(request):
     # Получаем все товары
     all_products = Product.objects.all()
-    discoun = Discounted.objects.filter(user=request.user)
+    if request.user.is_authenticated:
+        discoun = Discounted.objects.filter(user=request.user)
+    else:
+        discoun = None
 
     # Извлекаем параметры фильтрации, сортировки и категории из запроса
     filter_price_min = request.GET.get('price_min')
